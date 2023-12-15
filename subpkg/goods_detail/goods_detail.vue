@@ -40,7 +40,39 @@
 </template>
 
 <script>
+	// 从 vuex 中按需导出 mapState 辅助方法
+	import {mapState,mapMutations,mapGetters} from 'vuex'
 	export default {
+		computed:{
+			// 调用 mapState 方法，把 m_cart 模块中的 cart 数组映射到当前页面中，作为计算属性来使用
+			...mapState('m_cart',[]),
+			// 把 m_cart 模块中名称为 total 的 getter 映射到当前页面中使用
+			...mapGetters('m_cart', ['total']),
+		},
+		
+		// 1. 监听 total 值的变化，通过第一个形参得到变化后的新值
+		watch:{
+			// total(newVal){
+			// 	// 2. 通过数组的 find() 方法，找到购物车按钮的配置对象
+			// 	const findResult = this.options.find((x) => x.text === '购物车')
+			// 	if(findResult){
+			// 		// 3. 动态为购物车按钮的 info 属性赋值
+			// 		findResult.info = newVal
+			// 	}
+			// }
+			total:{
+				// handler 属性用来定义侦听器的 function 处理函数
+				handler(newVal){
+					const findResult = this.options.find((x) => x.text === '购物车')
+					if(findResult){
+						// 3. 动态为购物车按钮的 info 属性赋值
+						findResult.info = newVal
+					}
+				},
+				// immediate 属性用来声明此侦听器，是否在页面初次加载完毕后立即调用
+				immediate: true
+			}
+		},
 		data() {
 			return {
 				//商品详情
@@ -54,7 +86,7 @@
 					{
 						icon: 'cart',
 						text: '购物车',
-						info: 9
+						info: 0
 					}
 				],
 				// 右侧按钮组的配置对象
@@ -76,6 +108,9 @@
 			this.getGoodsDetail(goods_id)
 		},
 		methods:{
+			// 把 m_cart 模块中的 addToCart 方法映射到当前页面使用
+			...mapMutations('m_cart', ['addToCart']),
+			//获取商品详情
 			async getGoodsDetail(goods_id){
 				const { data: res } = await uni.$http.get('/api/public/v1/goods/detail', { goods_id })
 				if (res.meta.status !== 200) return uni.$showMsg()
@@ -96,12 +131,27 @@
 			},
 			//点击顶部跳转
 			onClick(e){
-				console.log(e)
 				if(e.content.text === "购物车"){
 					uni.switchTab({
 						url:"/pages/cart/cart"
 					})
 				}
+			},
+			buttonClick(e){
+				if(e.content.text === "加入购物车"){
+					//定义商品对象
+					const goods={
+						goods_id:this.goods_info.goods_id, // 商品的Id
+						goods_name:this.goods_info.goods_name, // 商品的名称
+						goods_price:this.goods_info.goods_price,  // 商品的价格
+						goods_count:1, // 商品的数量
+						goods_small_logo:this.goods_info.goods_small_logo, // 商品的图片
+						goods_state:true //商品的勾选状态
+					}
+					//加入购物车
+					this.addToCart(goods)
+				}
+				
 			}
 		}
 	}

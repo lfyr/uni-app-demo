@@ -4,6 +4,7 @@
 			<my-goods-list :goods="item"></my-goods-list>
 		</view>
 	</view>
+	
 </template>
 
 <script>
